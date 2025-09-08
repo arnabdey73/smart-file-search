@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mcp_server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mcp
+    ports:
+      - "${MCP_PORT:-9000}:9000"
+    environment:
+      - DB_PATH=/app/data/file_index.sqlite3
+      - ALLOWED_ROOTS=/mnt/shared
+      - LOG_LEVEL=INFO
+      - GPT_API_KEY=${GPT_API_KEY}
+    volumes:
+      - ../data:/app/data
+      - /mnt/shared:/mnt/shared:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ui_backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui-backend
+    ports:
+      - "${UI_BACKEND_PORT:-8081}:8081"
+    environment:
+      - MCP_SERVER_URL=http://mcp_server:9000
+      - CORS_ORIGINS=http://localhost:8080
+      - REQUIRE_AUTH=${REQUIRE_AUTH:-false}
+      - API_KEYS=${API_KEYS}
+    depends_on:
+      - mcp_server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ui_frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui-frontend
+    ports:
+      - "${UI_FRONTEND_PORT:-8080}:8080"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8081
+    depends_on:
+      - ui_backend
+    restart: unless-stopped
+
+volumes:
+  data:
+    driver: local
+
+networks:
+  default:
+    name: smart-file-search

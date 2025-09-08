@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smart-file-search-config
+  namespace: smart-file-search
+  labels:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: config
+data:
+  MCP_SERVER_NAME: "smart-file-search"
+  MCP_HOST: "0.0.0.0"
+  MCP_PORT: "9000"
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+  DB_PATH: "/app/data/file_index.sqlite3"
+  MAX_FILE_SIZE: "10485760"
+  ALLOWED_ROOTS: "/app/data,/app/sample_data"

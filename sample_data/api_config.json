@@ -1,0 +1,193 @@
+{
+  "api": {
+    "version": "1.0.0",
+    "title": "Smart File Search API",
+    "description": "REST API for intelligent document search and indexing",
+    "baseUrl": "http://localhost:8081/api"
+  },
+  "endpoints": {
+    "search": {
+      "method": "GET",
+      "path": "/search",
+      "description": "Search indexed files using natural language queries",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "Search query text"
+        },
+        "k": {
+          "type": "integer",
+          "default": 10,
+          "description": "Number of results to return"
+        },
+        "offset": {
+          "type": "integer", 
+          "default": 0,
+          "description": "Results offset for pagination"
+        },
+        "exts": {
+          "type": "string",
+          "description": "Comma-separated file extensions to filter by"
+        },
+        "years": {
+          "type": "string",
+          "description": "Comma-separated years to filter by"
+        },
+        "roots": {
+          "type": "string",
+          "description": "Comma-separated root paths to search in"
+        }
+      }
+    },
+    "file_preview": {
+      "method": "GET",
+      "path": "/file-preview",
+      "description": "Get preview of file content with context",
+      "parameters": {
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "File path to preview"
+        },
+        "pointer": {
+          "type": "string",
+          "description": "Document pointer for specific chunk"
+        },
+        "before": {
+          "type": "integer",
+          "default": 200,
+          "description": "Characters to include before match"
+        },
+        "after": {
+          "type": "integer",
+          "default": 200,
+          "description": "Characters to include after match"
+        }
+      }
+    },
+    "summarize": {
+      "method": "POST",
+      "path": "/summarize",
+      "description": "Generate AI summary of search results",
+      "body": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "Original search query"
+        },
+        "results": {
+          "type": "array",
+          "required": true,
+          "description": "Array of search result objects"
+        },
+        "style": {
+          "type": "string",
+          "default": "bullets",
+          "enum": ["bullets", "paragraph", "table"],
+          "description": "Summary style format"
+        },
+        "max_tokens": {
+          "type": "integer",
+          "default": 500,
+          "description": "Maximum tokens for summary"
+        }
+      }
+    },
+    "roots": {
+      "method": "GET",
+      "path": "/roots",
+      "description": "Get list of available root directories for searching"
+    },
+    "index": {
+      "method": "POST", 
+      "path": "/index",
+      "description": "Trigger indexing of a folder",
+      "parameters": {
+        "root": {
+          "type": "string",
+          "required": true,
+          "description": "Root path to index"
+        },
+        "full": {
+          "type": "boolean",
+          "default": false,
+          "description": "Force full reindex"
+        },
+        "priority": {
+          "type": "string",
+          "default": "normal",
+          "enum": ["low", "normal", "high"],
+          "description": "Indexing priority"
+        }
+      }
+    },
+    "health": {
+      "method": "GET",
+      "path": "/healthz",
+      "description": "Health check endpoint",
+      "response": {
+        "status": "string",
+        "timestamp": "string",
+        "version": "string"
+      }
+    }
+  },
+  "security": {
+    "authentication": {
+      "type": "bearer",
+      "description": "Optional API key authentication via Bearer token",
+      "header": "Authorization: Bearer <api-key>"
+    },
+    "rate_limiting": {
+      "requests_per_minute": 60,
+      "burst_size": 10
+    }
+  },
+  "response_formats": {
+    "search_response": {
+      "items": [
+        {
+          "path": "string",
+          "pointer": "string", 
+          "snippet": "string",
+          "score": "number",
+          "ext": "string",
+          "modified": "timestamp"
+        }
+      ],
+      "pagination": {
+        "offset": "integer",
+        "returned": "integer",
+        "total_estimate": "integer"
+      }
+    },
+    "error_response": {
+      "error": {
+        "message": "string",
+        "status_code": "integer",
+        "details": "string"
+      }
+    }
+  },
+  "examples": {
+    "search_request": "GET /api/search?query=python%20machine%20learning&k=5&exts=.py,.md",
+    "search_response": {
+      "items": [
+        {
+          "path": "/docs/ml_tutorial.md",
+          "pointer": "chunk_0",
+          "snippet": "Python machine learning tutorial covering <mark>scikit-learn</mark>...",
+          "score": 0.95,
+          "ext": ".md",
+          "modified": 1704067200
+        }
+      ],
+      "pagination": {
+        "offset": 0,
+        "returned": 1,
+        "total_estimate": 15
+      }
+    }
+  }
+}

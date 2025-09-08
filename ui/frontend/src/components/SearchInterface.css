@@ -1,0 +1,243 @@
+.search-interface {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-interface h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 1.4em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-input-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.search-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+}
+
+.search-button {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+}
+
+.search-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  transform: translateY(-1px);
+}
+
+.search-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.search-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-group label {
+  font-weight: 600;
+  color: #34495e;
+  font-size: 14px;
+}
+
+.file-type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-type-chip {
+  padding: 6px 12px;
+  background: #ecf0f1;
+  color: #34495e;
+  border: 1px solid #bdc3c7;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-type-chip:hover {
+  background: #d5dbdb;
+}
+
+.file-type-chip.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.max-results-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 80px;
+}
+
+.ai-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.ai-toggle:hover {
+  background-color: #f8f9fa;
+}
+
+.ai-toggle input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.ai-toggle small {
+  display: block;
+  margin-top: 4px;
+  color: #7f8c8d;
+  font-size: 11px;
+}
+
+.search-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #ecf0f1;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.search-examples small {
+  font-weight: 600;
+  color: #7f8c8d;
+  margin-right: 8px;
+}
+
+.search-examples button {
+  padding: 4px 8px;
+  background: #34495e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-examples button:hover {
+  background: #2c3e50;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .search-interface {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  .search-input-container {
+    flex-direction: column;
+  }
+  
+  .search-input {
+    margin-bottom: 10px;
+  }
+  
+  .search-button {
+    width: 100%;
+  }
+  
+  .search-options {
+    padding: 12px;
+  }
+  
+  .file-type-chips {
+    justify-content: center;
+  }
+  
+  .search-examples {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-examples button {
+    margin: 2px 0;
+  }
+}
+
+/* Loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.search-button:disabled {
+  animation: pulse 2s infinite;
+}
+
+/* Focus styles for accessibility */
+.search-input:focus,
+.search-button:focus,
+.file-type-chip:focus,
+.max-results-select:focus,
+.ai-toggle input:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.3);
+  outline-offset: 2px;
+}

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Frontend - Web UI served to users
+  frontend:
+    build:
+      context: ./ui/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://backend:8000
+      - VITE_DEPLOYMENT_MODE=web
+    depends_on:
+      - backend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`your-domain.com`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+  # Backend - API server with network folder access
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEPLOYMENT_MODE=web
+      - WEB_ACCESS_ENABLED=true
+      - DB_PATH=/data/file_index.sqlite3
+      - MAX_CONCURRENT_USERS=50
+      - RATE_LIMIT_PER_MINUTE=200
+    volumes:
+      # Persistent database storage
+      - sqlite_data:/data
+      # Mount Windows network shares (update paths for your environment)
+      # - //fileserver/documents:/mnt/network/documents:ro
+      # - //nas/projects:/mnt/network/projects:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`your-domain.com`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+
+volumes:
+  sqlite_data:
+    driver: local
+
+networks:
+  default:
+    name: smart-file-search-web

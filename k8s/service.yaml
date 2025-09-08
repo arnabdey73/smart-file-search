@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-file-search-service
+  namespace: smart-file-search
+  labels:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: service
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: server
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-file-search-nodeport
+  namespace: smart-file-search
+  labels:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: nodeport
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+    nodePort: 30900
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: server

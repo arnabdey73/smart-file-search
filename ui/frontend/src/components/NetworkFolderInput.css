@@ -1,0 +1,267 @@
+.network-folder-input {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.network-folder-input h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 1.4em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #34495e;
+}
+
+.path-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.path-input {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.3s ease;
+}
+
+.path-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.path-input.valid {
+  border-color: #27ae60;
+  background-color: #f0fff4;
+}
+
+.path-input.invalid {
+  border-color: #e74c3c;
+  background-color: #fff5f5;
+}
+
+.validation-icon {
+  position: absolute;
+  right: 12px;
+  font-size: 16px;
+}
+
+.validation-message {
+  margin-top: 8px;
+  font-size: 13px;
+  min-height: 18px;
+  color: #666;
+}
+
+.validation-message:has-text {
+  font-weight: 500;
+}
+
+.example-paths {
+  margin-top: 12px;
+  padding: 12px;
+  background: #ecf0f1;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.example-paths small {
+  font-weight: 600;
+  color: #7f8c8d;
+}
+
+.example-paths ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.example-paths li {
+  margin-bottom: 4px;
+  color: #34495e;
+}
+
+.example-paths code {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+.scan-options {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.scan-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.scan-options input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.index-button {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.index-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+}
+
+.index-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.indexed-folders {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.indexed-folders h4 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.folder-item {
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.folder-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.folder-item.accessible {
+  border-left: 4px solid #27ae60;
+}
+
+.folder-item.inaccessible {
+  border-left: 4px solid #e74c3c;
+  opacity: 0.8;
+}
+
+.folder-path {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.status-icon {
+  font-size: 12px;
+}
+
+.folder-path code {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.folder-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.folder-stats span {
+  padding: 2px 8px;
+  background: #ecf0f1;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .network-folder-input {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  .folder-stats {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .example-paths ul {
+    padding-left: 16px;
+  }
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.index-button:disabled {
+  animation: pulse 2s infinite;
+}
+
+/* Focus styles for accessibility */
+.path-input:focus,
+.index-button:focus,
+.scan-options input:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.3);
+  outline-offset: 2px;
+}

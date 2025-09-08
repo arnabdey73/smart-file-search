@@ -1,0 +1,81 @@
+# Configuration files
+
+# Default settings
+database:
+  path: "./data/file_index.sqlite3"
+  backup_enabled: true
+  backup_interval_hours: 24
+
+indexing:
+  chunk_size: 1000
+  chunk_overlap: 100
+  max_file_size: 10485760  # 10MB
+  supported_extensions:
+    - ".txt"
+    - ".md" 
+    - ".py"
+    - ".js"
+    - ".ts"
+    - ".html"
+    - ".css"
+    - ".json"
+    - ".xml"
+    - ".yaml" 
+    - ".yml"
+    - ".csv"
+    - ".sql"
+    - ".pdf"
+    - ".docx"
+    - ".doc"
+    - ".pptx"
+    - ".ppt"
+    - ".xlsx"
+    - ".xls"
+    - ".zip"
+  batch_size: 100
+  max_workers: 4
+
+search:
+  default_limit: 10
+  max_limit: 100
+  enable_semantic_search: false
+  semantic_model: "all-MiniLM-L6-v2"
+  max_snippet_length: 500
+
+security:
+  allowed_roots: []  # Set in environment
+  redact_patterns:
+    - "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"  # emails
+    - "\\b[A-Z0-9]{20,}\\b"  # tokens
+    - "\\b\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}\\b"  # credit cards
+  max_content_size: 1048576  # 1MB
+  rate_limit:
+    requests_per_minute: 60
+    burst_size: 10
+
+llm:
+  model: "gpt-4.1-mini"
+  max_tokens: 1000
+  temperature: 0.3
+  timeout_seconds: 30
+  max_retries: 3
+  retry_delay_seconds: 1
+
+ui:
+  backend:
+    host: "0.0.0.0"
+    port: 8081
+    cors_origins: ["*"]
+  frontend:
+    host: "0.0.0.0" 
+    port: 8080
+
+mcp:
+  host: "0.0.0.0"
+  port: 9000
+  tools:
+    - "listRoots"
+    - "indexFolder" 
+    - "searchFiles"
+    - "openFile"
+    - "summarizeResults"

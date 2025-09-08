@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smart-file-search
+  labels:
+    name: smart-file-search
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/part-of: smart-file-search-platform

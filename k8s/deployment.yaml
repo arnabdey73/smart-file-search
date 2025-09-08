@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-file-search
+  namespace: smart-file-search
+  labels:
+    app.kubernetes.io/name: smart-file-search
+    app.kubernetes.io/component: server
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smart-file-search
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: smart-file-search
+        app.kubernetes.io/component: server
+    spec:
+      containers:
+      - name: smart-file-search
+        image: smart-file-search:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9000
+          name: http
+          protocol: TCP
+        env:
+        - name: MCP_SERVER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: MCP_SERVER_NAME
+        - name: MCP_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: MCP_HOST
+        - name: MCP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: MCP_PORT
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: DEBUG
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: LOG_LEVEL
+        - name: DB_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: DB_PATH
+        - name: MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: MAX_FILE_SIZE
+        - name: ALLOWED_ROOTS
+          valueFrom:
+            configMapKeyRef:
+              name: smart-file-search-config
+              key: ALLOWED_ROOTS
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smart-file-search-secrets
+              key: OPENAI_API_KEY
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: sample-data-volume
+          mountPath: /app/sample_data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: smart-file-search-data
+      - name: sample-data-volume
+        configMap:
+          name: smart-file-search-sample-data
+          optional: true
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000

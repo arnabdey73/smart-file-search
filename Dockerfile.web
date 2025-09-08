@@ -1,0 +1,50 @@
+# Multi-stage build for web deployment
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app
+COPY ui/frontend/package*.json ./
+RUN npm ci --only=production
+
+COPY ui/frontend/ ./
+RUN npm run build
+
+# Production backend with web optimizations
+FROM python:3.11-slim
+
+# Install system dependencies for network folder access
+RUN apt-get update && apt-get install -y \
+    curl \
+    cifs-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY search_agent/ ./search_agent/
+COPY ui/backend/ ./ui/backend/
+
+# Copy built frontend
+COPY --from=frontend-builder /app/dist ./ui/frontend/dist
+
+# Create data directory for persistent storage
+RUN mkdir -p /data && chmod 755 /data
+
+# Web deployment configuration
+ENV DEPLOYMENT_MODE=web
+ENV WEB_ACCESS_ENABLED=true
+ENV DB_PATH=/data/file_index.sqlite3
+ENV PYTHONPATH=/app
+
+# Health check for web deployment
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose web ports
+EXPOSE 8000
+
+# Start backend server optimized for web
+CMD ["python", "-m", "uvicorn", "ui.backend.api_network_main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
