@@ -39,6 +39,13 @@ class SearchConfig:
         self.enable_summarization = True
         self.openai_api_key = os.getenv("OPENAI_API_KEY", "your_openai_api_key_here")
         
+        # Token conservation settings
+        self.daily_token_limit = int(os.getenv("DAILY_TOKEN_LIMIT", "5000"))
+        self.max_tokens_per_request = int(os.getenv("MAX_TOKENS_PER_REQUEST", "100"))
+        self.require_explicit_ai_opt_in = os.getenv("REQUIRE_EXPLICIT_AI_OPT_IN", "true").lower() == "true"
+        self.auto_disable_on_limit = os.getenv("AUTO_DISABLE_ON_LIMIT", "true").lower() == "true"
+        self.enable_token_warnings = os.getenv("ENABLE_TOKEN_WARNINGS", "true").lower() == "true"
+        
         # Windows network specific - optimized for containerized deployment
         self.index_hidden_files = False
         self.follow_symlinks = False

@@ -92,6 +92,7 @@ class SummarizeRequest(BaseModel):
 class SummarizeResponse(BaseModel):
     summary: str
     related_queries: List[str]
+    ai_usage: Optional[Dict[str, Any]] = None  # Token usage and cost information
 
 @app.get("/health")
 async def health_check():
@@ -257,6 +258,96 @@ async def search_files(request: SearchRequest):
         logger.error(f"Error searching: {e}")
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
 
+
+@app.get("/api/token-usage")
+async def get_token_usage():
+    """Get current token usage statistics and limits."""
+    try:
+        ai_enhancer = enhanced_search_engine.ai_enhancer
+        
+        if not ai_enhancer:
+            return {"error": "AI enhancer not available"}
+            
+        stats = ai_enhancer.get_token_usage_stats()
+        return {
+            "status": "success",
+            "token_usage": stats,
+            "limits": {
+                "daily_limit": ai_enhancer.daily_token_limit,
+                "per_request_limit": ai_enhancer.max_tokens_per_request
+            },
+            "pricing": {
+                "model": "gpt-4o-mini",
+                "cost_per_1k_tokens": 0.00015,
+                "estimated_queries_remaining": max(0, int(stats.get("remaining_tokens", 0) / 50))  # Assume ~50 tokens per query
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting token usage: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ai/enhance-query")
+async def enhance_query(request: dict):
+    """Enhance a search query using AI with token tracking."""
+    try:
+        query = request.get("query", "")
+        force = request.get("force", False)
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required")
+            
+        ai_enhancer = enhanced_search_engine.ai_enhancer
+        
+        if not ai_enhancer:
+            return {
+                "enhanced_query": query,
+                "tokens_used": 0,
+                "ai_used": False,
+                "reason": "ai_not_available"
+            }
+            
+        result = ai_enhancer.enhance_query(query, force=force)
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error enhancing query: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ai/set-limits")
+async def set_token_limits(request: dict):
+    """Update token usage limits (admin endpoint)."""
+    try:
+        ai_enhancer = enhanced_search_engine.ai_enhancer
+        
+        if not ai_enhancer:
+            raise HTTPException(status_code=400, detail="AI enhancer not available")
+            
+        daily_limit = request.get("daily_limit")
+        per_request_limit = request.get("per_request_limit")
+        
+        if daily_limit and daily_limit > 0:
+            ai_enhancer.daily_token_limit = daily_limit
+            logger.info(f"Daily token limit updated to: {daily_limit}")
+            
+        if per_request_limit and per_request_limit > 0:
+            ai_enhancer.max_tokens_per_request = per_request_limit
+            logger.info(f"Per-request token limit updated to: {per_request_limit}")
+            
+        return {
+            "status": "success",
+            "new_limits": {
+                "daily_limit": ai_enhancer.daily_token_limit,
+                "per_request_limit": ai_enhancer.max_tokens_per_request
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error setting token limits: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/summarize", response_model=SummarizeResponse)
 async def summarize_results(request: SummarizeRequest):
     """Generate AI summary and related queries for search results"""
@@ -266,22 +357,40 @@ async def summarize_results(request: SummarizeRequest):
         if not ai_enhancer.is_available():
             raise HTTPException(status_code=503, detail="AI features not available")
         
-        # Generate summary
-        summary = ai_enhancer.summarize_results(
+        # Generate summary with token tracking
+        summary_result = ai_enhancer.summarize_results(
             query=request.query,
             results=request.results,
-            style=request.style
+            style=request.style,
+            force=request.get("force_ai", False)
         )
         
-        # Generate related queries
-        related_queries = ai_enhancer.suggest_related_queries(
+        # Generate related queries with token tracking
+        queries_result = ai_enhancer.suggest_related_queries(
             query=request.query,
-            results=request.results
+            results=request.results,
+            force=request.get("force_ai", False)
         )
         
         return SummarizeResponse(
-            summary=summary,
-            related_queries=related_queries
+            summary=summary_result.get("summary", ""),
+            related_queries=queries_result.get("suggestions", []),
+            ai_usage={
+                "summary": {
+                    "tokens_used": summary_result.get("tokens_used", 0),
+                    "ai_used": summary_result.get("ai_used", False),
+                    "cost_usd": summary_result.get("cost_usd", 0),
+                    "reason": summary_result.get("reason", "")
+                },
+                "related_queries": {
+                    "tokens_used": queries_result.get("tokens_used", 0),
+                    "ai_used": queries_result.get("ai_used", False),
+                    "cost_usd": queries_result.get("cost_usd", 0),
+                    "reason": queries_result.get("reason", "")
+                },
+                "total_tokens": summary_result.get("tokens_used", 0) + queries_result.get("tokens_used", 0),
+                "total_cost_usd": summary_result.get("cost_usd", 0) + queries_result.get("cost_usd", 0)
+            }
         )
         
     except HTTPException:

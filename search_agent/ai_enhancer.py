@@ -1,6 +1,9 @@
-"""AI integration for Smart File Search using OpenAI GPT-4o-mini."""
+"""AI integration for Smart File Search using OpenAI GPT-4o-mini with token minimization."""
 import os
+import json
 import logging
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 import openai
 from openai import OpenAI
@@ -8,11 +11,16 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 class AISearchEnhancer:
-    """AI-powered search enhancement using OpenAI GPT-4o-mini."""
+    """AI-powered search enhancement using OpenAI GPT-4o-mini with token minimization."""
     
     def __init__(self, config):
         self.config = config
         self.client = None
+        # Token conservation settings
+        self.daily_token_limit = 5000  # Conservative daily limit
+        self.max_tokens_per_request = 100  # Reduced from default
+        self.usage_file = Path("data/token_usage.json")
+        self.usage_file.parent.mkdir(exist_ok=True)
         self._initialize_client()
     
     def _initialize_client(self):
@@ -30,96 +38,198 @@ class AISearchEnhancer:
             logger.error(f"Failed to initialize OpenAI client: {e}")
     
     def is_available(self) -> bool:
-        """Check if AI features are available."""
-        return self.client is not None and self.config.enable_query_rewrite
-    
-    def enhance_query(self, user_query: str) -> str:
-        """Enhance user query for better search results."""
-        if not self.is_available():
-            return user_query
+        """Check if AI features are available and within token limits."""
+        if not (self.client is not None and self.config.enable_query_rewrite):
+            return False
         
+        # Check daily token limit
+        return not self._is_daily_limit_exceeded()
+    
+    def _is_daily_limit_exceeded(self) -> bool:
+        """Check if daily token limit has been exceeded."""
         try:
-            prompt = f"""
-            You are an expert at transforming user search queries into effective file search terms.
+            if not self.usage_file.exists():
+                return False
+                
+            with open(self.usage_file, 'r') as f:
+                usage_data = json.load(f)
+                
+            today = datetime.now().strftime("%Y-%m-%d")
+            today_usage = usage_data.get(today, 0)
             
-            Transform this user query into better search keywords for finding files in a Windows network folder:
-            "{user_query}"
+            if today_usage >= self.daily_token_limit:
+                logger.warning(f"Daily token limit ({self.daily_token_limit}) exceeded. Usage: {today_usage}")
+                return True
+                
+            return False
             
-            Guidelines:
-            - Focus on key terms that would appear in file names and content
-            - Include relevant file types and categories
-            - Add synonyms and related terms
-            - Keep it concise and focused
-            - Return only the enhanced search terms, no explanation
+        except Exception as e:
+            logger.error(f"Error checking token usage: {e}")
+            return False
+    
+    def _log_token_usage(self, tokens: int) -> None:
+        """Log token usage for tracking."""
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
             
-            Enhanced search terms:
-            """
+            if self.usage_file.exists():
+                with open(self.usage_file, 'r') as f:
+                    usage_data = json.load(f)
+            else:
+                usage_data = {}
+                
+            usage_data[today] = usage_data.get(today, 0) + tokens
+            
+            # Clean up old entries (keep last 30 days)
+            cutoff_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            usage_data = {k: v for k, v in usage_data.items() if k >= cutoff_date}
+            
+            with open(self.usage_file, 'w') as f:
+                json.dump(usage_data, f, indent=2)
+                
+            logger.info(f"Logged {tokens} tokens. Daily total: {usage_data[today]}")
+            
+        except Exception as e:
+            logger.error(f"Error logging token usage: {e}")
+    
+    def get_token_usage_stats(self) -> Dict[str, Any]:
+        """Get current token usage statistics."""
+        try:
+            if not self.usage_file.exists():
+                return {
+                    "today_usage": 0,
+                    "daily_limit": self.daily_token_limit,
+                    "remaining_tokens": self.daily_token_limit,
+                    "usage_percentage": 0,
+                    "cost_today_usd": 0
+                }
+                
+            with open(self.usage_file, 'r') as f:
+                usage_data = json.load(f)
+                
+            today = datetime.now().strftime("%Y-%m-%d")
+            today_usage = usage_data.get(today, 0)
+            
+            return {
+                "today_usage": today_usage,
+                "daily_limit": self.daily_token_limit,
+                "remaining_tokens": max(0, self.daily_token_limit - today_usage),
+                "usage_percentage": round((today_usage / self.daily_token_limit) * 100, 1),
+                "cost_today_usd": round(today_usage * 0.00015 / 1000, 4),  # GPT-4o-mini pricing
+                "last_7_days": {
+                    date: tokens for date, tokens in usage_data.items()
+                    if date >= (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting token usage stats: {e}")
+            return {"error": str(e)}
+    
+    def enhance_query(self, user_query: str, force: bool = False) -> Dict[str, Any]:
+        """Enhance user query for better search results with token tracking."""
+        result = {
+            "enhanced_query": user_query,
+            "tokens_used": 0,
+            "ai_used": False,
+            "reason": "original_query"
+        }
+        
+        if not force and not self.is_available():
+            result["reason"] = "ai_unavailable" if not self.client else "token_limit_exceeded"
+            return result
+        
+        # Skip AI for very short queries to save tokens
+        if len(user_query.strip()) < 3:
+            result["reason"] = "query_too_short"
+            return result
+            
+        try:
+            # Ultra-minimal prompt to reduce token usage
+            prompt = f"Better search terms for: {user_query[:50]}"
             
             response = self.client.chat.completions.create(
                 model=self.config.gpt_model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=100,
-                temperature=0.3
+                max_tokens=self.max_tokens_per_request,
+                temperature=0.2  # Lower temperature for more focused responses
             )
             
             enhanced_query = response.choices[0].message.content.strip()
-            logger.info(f"Query enhanced: '{user_query}' -> '{enhanced_query}'")
-            return enhanced_query
+            tokens_used = response.usage.total_tokens
+            
+            # Log token usage
+            self._log_token_usage(tokens_used)
+            
+            result.update({
+                "enhanced_query": enhanced_query,
+                "tokens_used": tokens_used,
+                "ai_used": True,
+                "reason": "enhanced",
+                "cost_usd": round(tokens_used * 0.00015 / 1000, 6)
+            })
+            
+            logger.info(f"Query enhanced: '{user_query}' -> '{enhanced_query}' (Tokens: {tokens_used})")
+            return result
             
         except Exception as e:
             logger.error(f"Query enhancement failed: {e}")
-            return user_query
+            result["reason"] = f"error: {str(e)}"
+            return result
     
-    def summarize_results(self, query: str, results: List[Dict[str, Any]], style: str = "bullets") -> str:
-        """Summarize search results using AI."""
-        if not self.is_available() or not self.config.enable_summarization:
-            return self._simple_summary(results)
+    def summarize_results(self, query: str, results: List[Dict[str, Any]], 
+                         style: str = "bullets", force: bool = False) -> Dict[str, Any]:
+        """Summarize search results using AI with token conservation."""
+        result = {
+            "summary": self._simple_summary(results),
+            "tokens_used": 0,
+            "ai_used": False,
+            "reason": "simple_summary"
+        }
+        
+        # Skip AI if not available or not enough results
+        if not force and (not self.is_available() or not self.config.enable_summarization or len(results) < 3):
+            result["reason"] = "ai_unavailable" if not self.client else "insufficient_results" if len(results) < 3 else "token_limit_exceeded"
+            return result
         
         try:
-            # Prepare results for summarization
-            results_text = ""
-            for i, result in enumerate(results[:10], 1):  # Limit to top 10 results
-                file_name = result.get('file_path', '').split('\\')[-1]
-                snippet = result.get('snippet', '')[:200]  # Limit snippet length
-                results_text += f"{i}. {file_name}: {snippet}\n"
+            # Ultra-minimal summarization to save tokens
+            files_text = ", ".join([
+                result.get('file_path', '').split('\\')[-1][:30] 
+                for result in results[:5]  # Only top 5 results
+            ])
             
-            style_instructions = {
-                "bullets": "Use bullet points with key findings",
-                "paragraph": "Write a flowing paragraph summary", 
-                "table": "Create a structured table format"
-            }
-            
-            prompt = f"""
-            Summarize these search results for the query "{query}".
-            
-            Search Results:
-            {results_text}
-            
-            Instructions:
-            - {style_instructions.get(style, 'Use bullet points')}
-            - Focus on the most relevant findings
-            - Group similar content together
-            - Highlight key themes and patterns
-            - Keep it concise but informative
-            - Maximum 300 words
-            
-            Summary:
-            """
+            # Very short prompt
+            prompt = f"Summarize search for '{query[:30]}': {files_text[:200]}"
             
             response = self.client.chat.completions.create(
                 model=self.config.gpt_model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.config.max_tokens,
-                temperature=0.5
+                max_tokens=min(self.max_tokens_per_request, 150),  # Limit tokens further
+                temperature=0.3
             )
             
             summary = response.choices[0].message.content.strip()
-            logger.info(f"Results summarized for query: '{query}'")
-            return summary
+            tokens_used = response.usage.total_tokens
+            
+            # Log token usage
+            self._log_token_usage(tokens_used)
+            
+            result.update({
+                "summary": summary,
+                "tokens_used": tokens_used,
+                "ai_used": True,
+                "reason": "ai_summary",
+                "cost_usd": round(tokens_used * 0.00015 / 1000, 6)
+            })
+            
+            logger.info(f"Results summarized for query: '{query}' (Tokens: {tokens_used})")
+            return result
             
         except Exception as e:
             logger.error(f"Result summarization failed: {e}")
-            return self._simple_summary(results)
+            result["reason"] = f"error: {str(e)}"
+            return result
     
     def _simple_summary(self, results: List[Dict[str, Any]]) -> str:
         """Create a simple summary without AI."""
@@ -139,50 +249,57 @@ class AISearchEnhancer:
         
         return summary.strip()
     
-    def suggest_related_queries(self, query: str, results: List[Dict[str, Any]]) -> List[str]:
-        """Suggest related search queries based on results."""
-        if not self.is_available() or len(results) < 3:
-            return []
+    def suggest_related_queries(self, query: str, results: List[Dict[str, Any]], 
+                              force: bool = False) -> Dict[str, Any]:
+        """Suggest related search queries based on results with token conservation."""
+        result = {
+            "suggestions": [],
+            "tokens_used": 0,
+            "ai_used": False,
+            "reason": "no_suggestions"
+        }
+        
+        # Skip AI if not available or insufficient results
+        if not force and (not self.is_available() or len(results) < 3):
+            result["reason"] = "ai_unavailable" if not self.client else "insufficient_results"
+            return result
         
         try:
-            # Extract file types and common terms from results
-            file_types = set()
-            content_terms = []
+            # Extract minimal context to save tokens
+            file_types = list(set([
+                os.path.splitext(result.get('file_path', ''))[1].lower()
+                for result in results[:3]  # Only check first 3 results
+            ]))[:3]  # Max 3 file types
             
-            for result in results[:5]:
-                file_path = result.get('file_path', '')
-                ext = os.path.splitext(file_path)[1].lower()
-                if ext:
-                    file_types.add(ext)
-                
-                snippet = result.get('snippet', '')
-                content_terms.append(snippet[:100])
-            
-            context = f"File types found: {', '.join(file_types)}\n"
-            context += f"Content samples: {' | '.join(content_terms)}"
-            
-            prompt = f"""
-            Based on the search query "{query}" and these results, suggest 3-5 related search queries that might be useful:
-            
-            {context}
-            
-            Suggest specific, actionable search queries that would help find related content.
-            Return only the queries, one per line, no numbering or explanation.
-            """
+            # Ultra-minimal prompt
+            prompt = f"Related queries for '{query[:30]}' finding {', '.join(file_types)} files:"
             
             response = self.client.chat.completions.create(
                 model=self.config.gpt_model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=150,
-                temperature=0.7
+                max_tokens=80,  # Very conservative limit
+                temperature=0.5
             )
             
-            suggestions = response.choices[0].message.content.strip().split('\n')
-            suggestions = [s.strip() for s in suggestions if s.strip()][:5]
+            suggestions_text = response.choices[0].message.content.strip()
+            suggestions = [s.strip() for s in suggestions_text.split('\n') if s.strip()][:3]  # Max 3 suggestions
+            tokens_used = response.usage.total_tokens
             
-            logger.info(f"Generated {len(suggestions)} related query suggestions")
-            return suggestions
+            # Log token usage
+            self._log_token_usage(tokens_used)
+            
+            result.update({
+                "suggestions": suggestions,
+                "tokens_used": tokens_used,
+                "ai_used": True,
+                "reason": "generated",
+                "cost_usd": round(tokens_used * 0.00015 / 1000, 6)
+            })
+            
+            logger.info(f"Generated {len(suggestions)} related query suggestions (Tokens: {tokens_used})")
+            return result
             
         except Exception as e:
             logger.error(f"Related query suggestion failed: {e}")
-            return []
+            result["reason"] = f"error: {str(e)}"
+            return result
