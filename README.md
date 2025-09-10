@@ -5,6 +5,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [🚀 GitOps Deployment (Recommended)](#-gitops-deployment-recommended)
 - [Quick Start](#quick-start)
 - [Windows Network Folders](#windows-network-folders)
 - [Search Features](#search-features)
@@ -16,7 +17,6 @@
 - [Security Features](#security-features)
 - [Performance](#performance)
 - [Troubleshooting](#troubleshooting)
-- [GitOps CI/CD Deployment](#gitops-cicd-deployment)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -33,34 +33,127 @@ This system is specifically designed for searching across Windows network folder
 - **Multi-format Support**: PDF, DOCX, PPTX, XLSX, text files, and more
 - **Optional AI Enhancement**: GPT-4o-mini for query improvement and summarization
 
-## 🚀 Quick Start
+## 🚀 GitOps Deployment (Recommended)
 
-### 🌐 Web-Based Access (Production)
+### 🌐 Production-Ready Web Application
 
-The Smart File Search system is **hosted on the GitOps platform** and accessed entirely through the web interface:
+The **preferred deployment method** is through GitOps platform hosting. This provides a fully-managed, production-ready solution accessible via web browser.
 
-**Access URL**: [Your GitOps Platform URL]/smart-file-search
+#### ✅ Why GitOps Deployment?
 
-**No local installation required** - simply open the web UI in your browser and start using the system immediately.
+- **🌍 Zero Installation**: Access via any web browser - no local setup required
+- **🔄 Auto-Updates**: Continuous deployment with GitOps synchronization  
+- **📈 Production Scale**: Kubernetes-based infrastructure with monitoring
+- **🔒 Enterprise Security**: Built-in security hardening and access controls
+- **💾 Persistent Data**: Reliable database storage with backup capabilities
+- **🌐 Network Access**: Direct connectivity to Windows network shares
 
-### Using the Web Interface
-1. **Access the Application**: Navigate to the hosted web UI
-2. **Add Network Folder**: Enter UNC path like `\\fileserver\documents`
-3. **Validate Path**: System checks accessibility and shows file count
-4. **Index Folder**: Click to start indexing (quick scan recommended)
-5. **Search Files**: Use natural language queries to find documents
+#### 🚀 Quick GitOps Setup
 
-### 🛠️ Local Development (Optional)
+1. **Deploy GitOps Platform** (if not already available):
+   ```bash
+   git clone https://github.com/arnabdey73/single-node-gitops
+   cd single-node-gitops
+   ./install.sh
+   ```
 
-For developers who need to run locally:
+2. **Deploy Smart File Search**:
+   ```bash
+   # Clone this repository
+   git clone https://github.com/arnabdey73/smart-file-search
+   cd smart-file-search
+   
+   # Apply Kubernetes manifests
+   kubectl apply -k k8s/
+   ```
 
-```batch
-scripts\start_all.bat
+3. **Configure Secrets**:
+   ```bash
+   # Set your OpenAI API key
+   kubectl create secret generic smart-file-search-secrets \
+     --from-literal=OPENAI_API_KEY=your-api-key-here \
+     -n smart-file-search
+   ```
+
+4. **Access Application**:
+   - **URL**: `https://your-gitops-domain/smart-file-search`
+   - **Login**: Use your GitOps platform credentials
+   - **Ready**: Start indexing network folders immediately!
+
+#### 🏗 GitOps Architecture
+
+```
+GitOps Platform (Kubernetes Cluster)
+├── 🌐 Smart File Search Web UI (React)
+│   ├── Public ingress with TLS termination
+│   ├── Responsive design for all devices  
+│   └── Real-time search interface
+├── ⚙️ Search API Backend (FastAPI)
+│   ├── Windows network folder connectivity
+│   ├── SQLite FTS5 search engine
+│   └── OpenAI GPT-4o-mini integration
+├── 💾 Persistent Storage
+│   ├── Database volume for search index
+│   └── Configuration and logs storage
+└── 🔗 Network Integration
+    ├── Windows share mounting (CIFS/SMB)
+    ├── Authentication passthrough
+    └── Real-time folder synchronization
 ```
 
-This will start:
-- Backend server (http://localhost:8000)
-- Frontend UI (http://localhost:3000)
+#### 📊 GitOps Features
+
+- **🔄 ArgoCD Integration**: Automated deployment and sync
+- **📈 Monitoring Ready**: Prometheus metrics + Grafana dashboards
+- **🛡️ Security Hardened**: Pod security policies and network controls
+- **🌐 Web-First Design**: Optimized for browser-based access
+- **📱 Mobile Responsive**: Works on phones, tablets, and desktops
+- **⚡ High Performance**: Container-optimized with resource limits
+
+#### 🎯 For Enterprise Users
+
+**GitOps deployment is recommended for**:
+- **Production environments** requiring reliability and monitoring
+- **Team collaboration** where multiple users need access
+- **Enterprise networks** with Windows file server integration  
+- **Compliance requirements** needing audit trails and security
+- **Scalable usage** with growing document repositories
+
+---
+
+## 🚀 Quick Start
+
+### 🌐 Production Access (GitOps Hosted)
+
+**Access the application directly via your GitOps platform**:
+
+🌍 **Web URL**: `https://your-gitops-domain/smart-file-search`
+
+✅ **Ready to Use**: No installation, no configuration - just open and search!
+
+### 📖 Using the Web Interface
+
+1. **🌐 Open Browser**: Navigate to the GitOps-hosted application
+2. **📁 Add Network Folders**: Enter UNC paths like `\\fileserver\documents`
+3. **✅ Validate Access**: System verifies connectivity and shows file counts
+4. **⚡ Quick Index**: Start indexing with recommended quick scan mode
+5. **🔍 Search**: Use natural language queries to find documents instantly
+6. **🤖 Enable AI** (Optional): Toggle AI enhancement for better results
+
+### 🛠️ Local Development (For Developers Only)
+
+If you're developing or customizing the application:
+
+```bash
+# Start local development environment
+scripts/start_all.bat
+```
+
+**Local URLs**:
+- API Backend: <http://localhost:8000>
+- Web Frontend: <http://localhost:3000>
+
+> **Note**: Production users should use the GitOps-hosted version for best performance and reliability.
 
 ## 🗂️ Windows Network Folders
 
@@ -279,214 +372,6 @@ docker-compose up --build
 - **Health Endpoint**: `/healthz`
 - **Structured Logging**: JSON format with correlation IDs
 - **Metrics**: Request timing and error rates
-
-## GitOps CI/CD Deployment
-
-### 🌐 Web-Hosted Application
-
-The Smart File Search system is designed to be **hosted on your GitOps platform** and accessed entirely through the web interface. Users connect via web browser to search Windows network folders without any local installation required.
-
-#### Production Deployment Model
-```
-GitOps Platform (Kubernetes)
-├── 🌐 Web Frontend (React) - Public access via browser
-├── ⚙️ API Backend (FastAPI) - Internal network folder access  
-├── 💾 SQLite Database - Persistent indexing data
-└── 🔗 Network Mounts - Windows share connectivity (\\server\share)
-```
-
-### GitOps Platform Support
-
-This application includes comprehensive support for the [single-node-gitops](https://github.com/arnabdey73/single-node-gitops) platform:
-
-- **🚀 ArgoCD Integration**: Automated GitOps deployment and synchronization
-- **☸️ Kubernetes Manifests**: Complete K8s deployment configuration optimized for web access
-- **📦 Container Registry**: Local registry support with automated image builds
-- **📊 Monitoring Integration**: Prometheus metrics and Grafana dashboards ready
-- **🔒 Security Hardening**: Pod security standards and network policies
-- **🌐 Web Access**: Ingress/LoadBalancer configured for browser access
-- **📁 Network Folder Support**: Windows share mounting and access from containers
-
-### Quick GitOps Deployment
-
-1. **Prerequisites**: Ensure GitOps platform is running
-   ```bash
-   git clone https://github.com/arnabdey73/single-node-gitops
-   cd single-node-gitops
-   ./install.sh
-   ```
-
-2. **Configure Secrets**: Set up your OpenAI API key
-   ```bash
-   # Encode your API key
-   echo -n "your-openai-api-key" | base64
-   
-   # Edit k8s/secret.yaml with the encoded value
-   ```
-
-3. **Deploy Application**: Use the automated deployment script
-   ```bash
-   chmod +x deploy-gitops.sh
-   ./deploy-gitops.sh deploy
-   ```
-
-4. **Access Services**:
-   - Application: `http://[NODE-IP]:30900`
-   - Health Check: `http://[NODE-IP]:30900/health`
-   - ArgoCD UI: `http://[NODE-IP]:30415`
-
-### GitOps Features
-
-#### Automated Deployment Pipeline
-```mermaid
-graph LR
-    A[Code Push] --> B[Container Build]
-    B --> C[Registry Push]
-    C --> D[ArgoCD Sync]
-    D --> E[K8s Deploy]
-    E --> F[Health Check]
-    F --> G[Monitoring]
-```
-
-#### Kubernetes Resources
-- **Namespace**: `smart-file-search`
-- **Deployment**: High-availability with rolling updates
-- **Services**: ClusterIP (internal) + NodePort (external)
-- **Storage**: 10Gi persistent volume for search index
-- **ConfigMaps**: Environment configuration
-- **Secrets**: Secure API key management
-
-#### CI/CD Integration
-```yaml
-# ArgoCD Application (k8s/argocd-application.yaml)
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: smart-file-search
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/your-username/smart-file-search
-    targetRevision: HEAD
-    path: k8s
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: smart-file-search
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-```
-
-### Management Commands
-
-#### Using Make
-```bash
-# Build and deploy
-make deploy
-
-# Check status
-make status
-
-# View logs
-make logs
-
-# Restart deployment
-make restart
-
-# Cleanup
-make cleanup
-```
-
-#### Using Deployment Script
-```bash
-# Deploy application
-./deploy-gitops.sh deploy
-
-# Check deployment status
-./deploy-gitops.sh status
-
-# Remove application
-./deploy-gitops.sh cleanup
-```
-
-### Platform Integration
-
-#### Monitoring & Observability
-- **Prometheus Metrics**: Application performance monitoring
-- **Grafana Dashboards**: Visual monitoring and alerting
-- **Health Probes**: Kubernetes liveness and readiness checks
-- **Structured Logging**: Centralized log aggregation
-
-#### Security & Compliance
-- **Pod Security Standards**: Non-root containers with dropped capabilities
-- **Network Policies**: Secure inter-service communication
-- **Secret Management**: Encrypted storage for sensitive data
-- **RBAC**: Role-based access control for service accounts
-
-#### High Availability
-- **Rolling Updates**: Zero-downtime deployments
-- **Resource Limits**: CPU and memory constraints
-- **Auto-Healing**: Automatic pod restart on failures
-- **Persistent Storage**: Data survival across pod restarts
-
-### Environment Configuration
-
-#### Production Settings
-```yaml
-# ConfigMap values for production
-MCP_HOST: "0.0.0.0"
-MCP_PORT: "9000"
-LOG_LEVEL: "INFO"
-MAX_FILE_SIZE: "10485760"
-DB_PATH: "/app/data/file_index.sqlite3"
-```
-
-#### Resource Requirements
-```yaml
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "250m"
-  limits:
-    memory: "512Mi"
-    cpu: "500m"
-```
-
-### Troubleshooting GitOps Deployment
-
-#### Common Issues
-1. **Pod Not Starting**: Check resource constraints and image pull status
-2. **Service Unavailable**: Verify NodePort accessibility and security groups
-3. **Database Errors**: Ensure persistent volume is properly mounted
-4. **ArgoCD Sync Failures**: Check repository access and manifest syntax
-
-#### Debug Commands
-```bash
-# Check pod status
-kubectl get pods -n smart-file-search
-
-# View application logs
-kubectl logs -n smart-file-search -l app.kubernetes.io/name=smart-file-search
-
-# Get pod shell access
-kubectl exec -n smart-file-search -it deployment/smart-file-search -- /bin/bash
-
-# Test service connectivity
-kubectl run test-pod --image=busybox -it --rm -- \
-  wget -O- http://smart-file-search-service.smart-file-search.svc.cluster.local:9000/health
-```
-
-#### ArgoCD Management
-```bash
-# Get ArgoCD admin password
-kubectl get secret argocd-initial-admin-secret -n argocd \
-  -o jsonpath="{.data.password}" | base64 -d
-
-# Force sync application
-kubectl patch app smart-file-search -n argocd \
-  --type json -p='[{"op": "replace", "path": "/operation", "value": {"sync": {}}}]'
-```
 
 ## 📚 Documentation
 

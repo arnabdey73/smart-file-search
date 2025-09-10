@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart File Search - UI Mockup</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-header p {
+            margin: 0.2rem 0;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .folder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .folder-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status.indexed { background: #d4edda; color: #155724; }
+        .status.indexing { background: #fff3cd; color: #856404; }
+
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .search-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-button {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-button:hover {
+            background: #5a67d8;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.6rem;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-checkbox.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .token-dashboard {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #667eea;
+        }
+
+        .token-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60 0%, #f39c12 70%, #e74c3c 90%);
+            width: 25%;
+            transition: width 0.3s;
+        }
+
+        .token-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #e8f4fd;
+            border-radius: 4px;
+        }
+
+        .result-item {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .score {
+            background: #27ae60;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .file-path {
+            color: #6c757d;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .snippet {
+            color: #495057;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.3rem 0.6rem;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .ai-insights {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+            border-left: 4px solid #667eea;
+        }
+
+        .ai-summary {
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .related-queries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .related-query {
+            padding: 0.4rem 0.8rem;
+            background: white;
+            border: 1px solid #667eea;
+            border-radius: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .related-query:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .status-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 0.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #27ae60;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .app-header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-input-container {
+                flex-direction: column;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .token-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>🔍 Smart File Search</h1>
+            <p>Search across Windows network folders with AI-powered insights</p>
+            <p>Web-hosted application • No installation required</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Network Folders Panel -->
+            <div class="panel">
+                <h3>📁 Network Folders</h3>
+                <div class="folder-list">
+                    <div class="folder-item">
+                        <span>\\network\shared\documents</span>
+                        <span class="status indexed">✓ Indexed</span>
+                    </div>
+                    <div class="folder-item">
+                        <span>\\server\projects\2024</span>
+                        <span class="status indexing">⏳ Indexing</span>
+                    </div>
+                    <div class="folder-item">
+                        <span>C:\Users\Shared\Reports</span>
+                        <span class="status indexed">✓ Indexed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Interface -->
+            <div class="panel">
+                <h3>🔍 Search Interface</h3>
+                <form class="search-form">
+                    <div class="search-input-container">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            placeholder="Search for documents, content, or ask a question..."
+                            value="budget reports Q3 2024"
+                        />
+                        <button type="submit" class="search-button">Search</button>
+                    </div>
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <span>Filters:</span>
+                            <label class="filter-checkbox">📄 PDF</label>
+                            <label class="filter-checkbox">📝 Word</label>
+                            <label class="filter-checkbox active">📊 Excel</label>
+                            <label class="filter-checkbox">📈 PowerPoint</label>
+                            <label class="filter-checkbox active">📋 Text</label>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <span>Max Results:</span>
+                            <select style="padding: 0.3rem;">
+                                <option>50</option>
+                            </select>
+                        </div>
+                        
+                        <label class="filter-checkbox active">
+                            🤖 Enable AI Enhancement
+                        </label>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Token Usage Dashboard -->
+            <div class="panel token-dashboard">
+                <h3>💰 Token Usage Dashboard</h3>
+                <div class="token-stats">
+                    <span><strong>Today's Usage:</strong></span>
+                    <span><strong>1,247 / 5,000 tokens (24.9%)</strong></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="token-info">
+                    <span>💵 Cost: $0.19 USD</span>
+                    <span>🔋 Remaining: 3,753 tokens</span>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div class="panel">
+                <div class="results-header">
+                    <span>📊 Found 47 files in 234ms (Standard FTS5 + AI Enhancement)</span>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="file-name">📄 Budget_Report_Q3_2024.xlsx</div>
+                        <div class="score">Score: 98%</div>
+                    </div>
+                    <div class="file-path">\\server\finance\reports\Budget_Report_Q3_2024.xlsx</div>
+                    <div class="snippet">"quarterly budget analysis for departments... revenue projections..."</div>
+                    <div class="file-meta">
+                        <span>📅 Modified: 2024-09-08 | 📏 Size: 2.3 MB</span>
+                        <div class="file-actions">
+                            <button class="action-btn">📖 Open</button>
+                            <button class="action-btn">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="file-name">📄 Financial_Summary_September.pdf</div>
+                        <div class="score">Score: 94%</div>
+                    </div>
+                    <div class="file-path">\\network\shared\documents\Financial_Summary_September.pdf</div>
+                    <div class="snippet">"executive summary of financial performance... budget variance..."</div>
+                    <div class="file-meta">
+                        <span>📅 Modified: 2024-09-05 | 📏 Size: 1.8 MB</span>
+                        <div class="file-actions">
+                            <button class="action-btn">📖 Open</button>
+                            <button class="action-btn">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="file-name">📄 Project_Budget_Template.docx</div>
+                        <div class="score">Score: 89%</div>
+                    </div>
+                    <div class="file-path">\\server\projects\templates\Project_Budget_Template.docx</div>
+                    <div class="snippet">"standardized template for project budget planning..."</div>
+                    <div class="file-meta">
+                        <span>📅 Modified: 2024-08-28 | 📏 Size: 456 KB</span>
+                        <div class="file-actions">
+                            <button class="action-btn">📖 Open</button>
+                            <button class="action-btn">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights Panel -->
+            <div class="panel ai-insights">
+                <h3>🤖 AI Insights Panel</h3>
+                <div class="ai-summary">
+                    <strong>AI Summary (Tokens used: 89)</strong>
+                    <p>Found 47 budget-related documents across 3 network locations. Most files contain Q3 2024 financial data including revenue projections, department budgets, and variance reports. Key themes: quarterly analysis, project planning, financial summaries.</p>
+                </div>
+                
+                <div>
+                    <strong>💡 Related Searches:</strong>
+                    <div class="related-queries">
+                        <a href="#" class="related-query">Q4 budget projections</a>
+                        <a href="#" class="related-query">department budget allocation</a>
+                        <a href="#" class="related-query">financial variance reports</a>
+                        <a href="#" class="related-query">revenue forecasting 2024</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>Connected to API</span>
+            </div>
+            <div class="status-item">
+                <span>📂 3 folders indexed (47,392 files)</span>
+            </div>
+            <div class="status-item">
+                <span>🔄 Last sync: 2m ago</span>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
